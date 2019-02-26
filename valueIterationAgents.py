@@ -37,7 +37,7 @@ class ValueIterationAgent(ValueEstimationAgent):
               mdp.getTransitionStatesAndProbs(state, action)
               mdp.getReward(state, action, nextState)
               mdp.isTerminal(state)
-              pi(s) = computeActionFromCalues(self,state)
+              pi(s) = computeActionFromValues(self,state)
               sum[s',r] P(s',r|s,a)*[r+gamma*V(s)] = computeQValueFromValues(self, s, a)
               V(s) = self.values[s]
               r = mdp.GetReward(s, a, s')
@@ -51,18 +51,26 @@ class ValueIterationAgent(ValueEstimationAgent):
         "*** YOUR CODE HERE ***"
         states = mdp.getStates()
         for iteration in range(self.iterations):
+            #print("inisde interation loop ", self.values)
             update = util.Counter()
             for state in states:
-                maxSum = int("-inf")
-                for action in mdp.getPossibleActions(state): #max
-                    #maxReward = max(maxReward, 
-                    for (nextState, nextProbability) in mdp.getTransitionStatesAndProbs(state, action): #sum
-                        theSum = nextProbability*(mdp.getReward(state,action,nextState) + (self.discount*self.values[state]))
-                        #sum over probabilities*(mdp.getReward + (discount*self.values[state]))
-                    maxSum = max(maxSum, theSum)
-                    update[state] = maxSum
+                #print("inisde state loop ", self.values)
+                if(mdp.isTerminal(state)):
+                    update[state] = 0
+                else:
+                    maxSum = float("-inf")
+                    for action in mdp.getPossibleActions(state): #max
+                        #print("inisde action loop ", self.values)
+                        #maxReward = max(maxReward,
+                        theSum = 0.0
+                        for (nextState, nextProbability) in mdp.getTransitionStatesAndProbs(state, action): #sum
+                            theSum += nextProbability*(mdp.getReward(state,action,nextState) + (self.discount*self.values[nextState]))
+                            #print("inisde trans. and probs. loop", self.values)
+                            #sum over probabilities*(mdp.getReward + (discount*self.values[state]))
+                        maxSum = max(maxSum, theSum)
+                        update[state] = maxSum
             self.values = update
-                        
+           # print("last self.values ", self.values)            
 
     def getValue(self, state):
         """
@@ -77,11 +85,16 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
-        #sum[s',r] P(s',r|s,a)*[r+gamma*V(s)]
-        #transitionsAndProbabilities = mdp.getTransitionStatesAndProbs(state, action)
-        #valueToReturn = 0
-        #for(nextState, nextProbability) in transitionsAndProbabilities:
-            
+        #print("in computeQValue ", self.values)
+        #print("HELLO")
+        
+        #sum[s',r] P(s',r|s,a)*[r+gamma*V(s)] = computeQValueFromValues(self, s, a)
+        #self.discount = discount
+        theSum = 0.0
+        for (nextState, nextProbability) in self.mdp.getTransitionStatesAndProbs(state, action): #sum
+            theSum += nextProbability*(self.mdp.getReward(state,action,nextState) + (self.discount*self.values[nextState]))
+        return theSum
+        #print("in computeQValue ", self.values)
         util.raiseNotDefined()
 
     def computeActionFromValues(self, state):
@@ -94,6 +107,15 @@ class ValueIterationAgent(ValueEstimationAgent):
           terminal state, you should return None.
         """
         "*** YOUR CODE HERE ***"
+        #pi(s) = computeActionFromValues(self,state)
+        bestAction = None
+        maxValue = float("-inf")
+        for action in self.mdp.getPossibleActions(state):
+            currentValue = self.computeQValueFromValues(state, action)
+            if(currentValue > maxValue):
+                maxValue = currentValue
+                bestAction = action
+        return bestAction
         util.raiseNotDefined()
 
     def getPolicy(self, state):
