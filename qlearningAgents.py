@@ -137,9 +137,9 @@ class QLearningAgent(ReinforcementAgent):
         """
         #getQValue(self, state, action)
         "*** YOUR CODE HERE ***"
-        oldValue = self.getQValue(state, action)
+        oldValue = self.values[(state, action)]
         newValue = oldValue + self.alpha*(reward+self.discount*(self.getQValue(nextState, action) - oldValue))
-        return newValue
+        self.values[(state, action)] = newValue
         util.raiseNotDefined()
 
     def getPolicy(self, state):
