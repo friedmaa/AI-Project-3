@@ -53,10 +53,6 @@ class QLearningAgent(ReinforcementAgent):
         """
         "*** YOUR CODE HERE ***"
         return self.values[(state, action)]
-        #theSum = 0.0
-        #for (nextState, nextProbability) in self.getTransitionStatesAndProbs(state, action): #sum
-        #    theSum += nextProbability*(self.getReward(state,action,nextState) + (self.discount*self.values[nextState]))
-        #return theSum
         util.raiseNotDefined()
 
 
@@ -72,13 +68,13 @@ class QLearningAgent(ReinforcementAgent):
             return 0.0
         else:
             maxAction = None
-            maximumQValue = 0.0
+            maximumQValue = float('-inf')
             for action in self.getLegalActions(state):
                 currentValue = self.getQValue(state, action)
                 if currentValue > maximumQValue:
                     maximumQValue = currentValue
                     maxAction = action
-        return maxAction
+        return maximumQValue
         util.raiseNotDefined()
 
     def computeActionFromQValues(self, state):
@@ -91,14 +87,21 @@ class QLearningAgent(ReinforcementAgent):
         if len(self.getLegalActions(state)) == 0: #no best action if none are possible
             return None
         else:
-            bestAction = None
-            arrayOfActions = []
-            bestValue = self.computeValueFromQValues(state)
+            listOfActions = []
+            maxAction = None
+            maximumQValue = float('-inf')
             for action in self.getLegalActions(state):
-                if bestValue == self.getQValue(state, action):
-                    arrayOfActions.append(action)
-                    bestAction = random.choice(arrayOfActions)
-            return bestAction
+                currentValue = self.getQValue(state, action)
+                if currentValue > maximumQValue:
+                    maximumQValue = currentValue
+                    maxAction = action
+                    listOfActions.clear()
+                    listOfActions.append(action)
+                elif currentValue == maximumQValue:
+                    listOfActions.append(action)
+            if len(listOfActions) > 1:
+                maxAction = random.choice(listOfActions)
+        return maxAction
         util.raiseNotDefined()
 
     def getAction(self, state):
@@ -138,9 +141,9 @@ class QLearningAgent(ReinforcementAgent):
         #getQValue(self, state, action)
         "*** YOUR CODE HERE ***"
         oldValue = self.values[(state, action)]
-        newValue = oldValue + self.alpha*(reward+self.discount*(self.getQValue(nextState, action) - oldValue))
+        newValue = oldValue + self.alpha*(reward+(self.discount*self.computeValueFromQValues(nextState))-oldValue)
         self.values[(state, action)] = newValue
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
 
     def getPolicy(self, state):
         return self.computeActionFromQValues(state)
